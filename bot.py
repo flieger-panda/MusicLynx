@@ -1,34 +1,30 @@
-# getting tokens
-import os
-from dotenv import load_dotenv
-
-# getting yt audio and searching youtube
-import yt_dlp
-from youtube_search import YoutubeSearch
-
-# regex
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
-
-import json
-
 # functional
 import asyncio
+import json
+import os
 import random
 import typing
-from io import BytesIO
+import urllib
 from datetime import datetime
-
-# genius client
-from lyricsgenius import Genius
-
-# spotify client
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
-
+from io import BytesIO
 # meme
 import requests
-import urllib
+# spotify client
+import spotipy
+# getting yt audio and searching youtube
+import yt_dlp
+from dotenv import load_dotenv
+# regex
+from fuzzywuzzy import fuzz
+# genius client
+from lyricsgenius import Genius
+from spotipy.oauth2 import SpotifyClientCredentials
+from youtube_search import YoutubeSearch
+# discord client imports
+import discord
+from discord.ext import commands
+from discord import app_commands
+from discord.utils import get
 
 # Getting tokens
 load_dotenv()
@@ -38,15 +34,6 @@ client_secret = os.environ.get('client_secret')
 genius_token = os.environ.get('genius_token')
 flieger_token = os.environ.get('flieger_token')
 
-# discord client imports
-import discord
-from discord.ext import commands
-from discord import app_commands
-from discord.utils import get
-from discord import FFmpegPCMAudio
-from discord import TextChannel
-from typing import List
-from typing import Optional
 
 # Setting up discord client
 intents = discord.Intents.all()
@@ -243,7 +230,7 @@ async def link(interaction: discord.Interaction, song: str):
     except Exception as e:
         print(e)
         genius_url = "Genius search failed"
-    
+
     await interaction.response.send_message(f"Genius: {genius_url}\nSpotify: {spotify_link}")
 
 @link.autocomplete("song")
@@ -860,6 +847,14 @@ async def on_message(message):
     if "china" in message.content.lower():
         await message.reply("*West Taiwan")
 
+    if "!yeti" in message.content:
+        await message.reply("Alrighty, guys, it's been fun, but we all need to tone it down. Remember, this is the "
+                            "official Georgia Tech '28 server. We've allowed you to have your fun for a while, "
+                            "but we really need to maintain a degree of professionalism. Most of the rules in #rules "
+                            "can be summed up in one rule: If you wouldn't want your professor or boss to see "
+                            "whatever you're thinking of posting, it's **NOT** appropriate to post it here either. "
+                            "We'd like to see more professionalism in the way you conduct yourself in this server. "
+                            "Keep in mind that this decision comes from our entire team. ")
     # responding to pings
     mention = f'<@{1196931379129241600}>'
     if mention in message.content:
