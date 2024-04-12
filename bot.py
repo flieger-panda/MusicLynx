@@ -10,6 +10,11 @@ from youtube_search import YoutubeSearch
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 
+import re
+def regex_match(word, message):
+    # \W<word>|^<word>
+    return bool(re.match((r'\W' + word + r'|^' + word), message))
+
 import json
 
 # functional
@@ -487,6 +492,12 @@ async def eight_ball(interaction: discord.Interaction, question: str):
 
     await interaction.followup.send(f"**Magic 8-ball**\nQuestion: {question}\nMagic 8-ball's Answer: `{answer}`")
 
+@bot.tree.command(name="timestmamp", description="send discord timestamp")
+@app_commands.describe(month="Month", day="Day", hour="Hour", minute="Minute")
+async def timestamp(interaction: discord.Interaction, heading: str, year: int, month: int, day: int, hour: int, minute: int):
+    event_date = datetime(year=year, month=month, day=day, hour=hour, minute=minute)
+    await interaction.response.send("in development")
+
 
 @bot.tree.command(name="meme", description="generates a meme that is visible to only you, or the entire server")
 @app_commands.choices(public=[
@@ -563,15 +574,15 @@ async def skip(interaction: discord.Interaction):
 
 
 lastcat = 0
-cat_credits = [109895389544484864, 491364750106558464, 445257802198417408, 121700801612742656, 748540576651280454]
+cat_credits = [109895389544484864, 491364750106558464, 445257802198417408, 121700801612742656, 748540576651280454, 694358844897492994]
 
 
 @bot.tree.command(name="car", description="sends a random pic of a car")
 async def skip(interaction: discord.Interaction):
     global lastcat
-    rand = random.randint(1, 5)
+    rand = random.randint(1, 6)
     while rand == lastcat:
-        rand = random.randint(1, 5)
+        rand = random.randint(1, 6)
     lastcat = rand
     with open(f'cat{rand}.png', 'rb') as img:
         picture = discord.File(img)
@@ -790,62 +801,31 @@ async def on_message(message):
             # logging the skip to console
             print(f"Skipping!: '{message.content}' as '{current_line}'")
 
-        # gt28-only feature
-        """
-        if message.guild.id == 1182890708265357392:
-            pings_str = ""
-            words_str = ""
-            for word in ping_info:
-                if word in message.content.lower():
-                    words_str += f"- {word}\n"
-                    for id in ping_info[word]:
-                        if str(id) not in pings_str:
-                            pings_str += f"<@{id}>"
-            if pings_str != "":
-                ask_boomers = channel = discord.utils.get(message.guild.channels, name="bot-commands")
-                await ask_boomers.send(
-                    f"{words_str}mentioned by <@{message.author.id}>, pinging {pings_str}, {message.jump_url}",
-                    silent=True)
-        """
-
         # amuhak's checker 🎉🎉🎉
         if (message.guild.id == 1182890708265357392) and (not message.flags.silent):
-               to_ping = []
-               why_ping = []
-               for word in ping_info:
-                    if word.lower() in message.content.lower():
-                         if type(ping_info[word]) is list:
-                              for id in ping_info[word]:
-                                   # print(ping_info[word], message.author.id)
-                                   why_ping.append(word)
-                                   to_ping.append(id)
-                                   try:
-                                        to_ping.remove(message.author.id)
-                                   except:
-                                        pass
-                         elif ping_info[word] is int:
-                              if message.author.id != ping_info[word]:
-                                   print(ping_info[word], message.author.id)
-                                   why_ping.append(word)
-                                   to_ping.append(ping_info[word])
-                         else:
-                              print(f"Error: ping_info[word] is neither a list nor a int it is {type(ping_info[word])}")
-
-        # deprecated checking method
-
-        # message_list = [word.lower() for word in message.content.split()]
-        # pings_str = ""
-        # words_str = ""
-        # for word in message_list:
-        #      if word in ping_info:
-        #           words_str += f"- {word}\n"
-        #           for id in ping_info[word]:
-        #                if str(id) not in pings_str:
-        #                     pings_str += f"<@{id}>"
-        # if pings_str != "":
-        #      await message.channel.send(f"{words_str}mentioned by <@{message.author.id}>, pinging {pings_str}", silent = True)
+            to_ping = []
+            why_ping = []
+            for word in ping_info:
+                if regex_match(word.lower(), message.content.lower()):
+                    if type(ping_info[word]) is list:
+                        for id in ping_info[word]:
+                            # print(ping_info[word], message.author.id)
+                            why_ping.append(word)
+                            to_ping.append(id)
+                            try:
+                                to_ping.remove(message.author.id)
+                            except:
+                                pass
+                    elif ping_info[word] is int:
+                        if message.author.id != ping_info[word]:
+                            print(ping_info[word], message.author.id)
+                            why_ping.append(word)
+                            to_ping.append(ping_info[word])
+                    else:
+                        print(f"Error: ping_info[word] is neither a list nor a int it is {type(ping_info[word])}")
 
     # checking if the sender of a message has been "nerded"
+
     if message.author.id in nerded:
         # incrementing number of messages sent while nerded
         nerded[message.author.id] += 1
@@ -859,6 +839,8 @@ async def on_message(message):
     # taiwan on top
     if "china" in message.content.lower():
         await message.reply("*West Taiwan")
+    if "chinese" in message.content.lower():
+        await message.reply("*West Taiwanese")
 
     # responding to pings
     mention = f'<@{1196931379129241600}>'
@@ -1127,33 +1109,11 @@ async def stop_lyrics(ctx):
     singing = False
     await ctx.send("ok. I'll stop 😕")
 
-
-# Joke lol
-
-# @bot.command(name = "heheboi")
-# async def heheboi(ctx, member: discord.Member):
-#      panda = member
-#      print(panda.display_name)
-#      role = discord.utils.get(ctx.guild.roles, name="Special contributor")
-#      # perms = discord.Permissions(administrator=True)
-#      await member.add_roles(role, reason = "heheboi")
-#      # await role.edit(permissions= perms)
-
-# @bot.command(name = "dontbanmeyeti")
-# async def dontbanmeyeti(ctx, member: discord.Member):
-#      panda = member
-#      print(panda.display_name)
-#      role = discord.utils.get(ctx.guild.roles, name="Special contributor")
-#      perms = discord.Permissions(administrator=True)
-#      # await member.add_roles(role, reason = "heheboi")
-#      await role.edit(name = "Special Contributor")
-#      # await role.edit(permissions= perms)
-
-
 @bot.command(name="preach", help="spits straight facts")
 async def preach(ctx):
     global fax
     await ctx.send(random.choice(fax))
+    await ctx.message.delete()
 
 
 # send reaction when bean
@@ -1183,8 +1143,22 @@ async def nerd(ctx, member: discord.Member):
         nerded[member.id] = 0
         await ctx.send(f"# <@{member.id}> = :nerd:")
 
-last_aarush = 0
+@bot.command(name="lonely")
+async def lonely(ctx, member: discord.Member = None):
+    if member == None:
+        member = ctx.author
+    try:
+        channel = member.voice.channel
+        # voice = get(bot.voice_clients, guild=ctx.guild)
+        if "lonely" in channel.name:
+            await channel.edit(name = f"{member.display_name} is lonely 😢")
+            await ctx.message.add_reaction("😢")
+        else:
+            await ctx.send("move to a designated 'lonely' channel")
+    except:
+        await ctx.send("not in a vc 💀")
 
+last_aarush = 0
 @bot.command(name="aarush", help="pings a random aarush")
 async def aarush(ctx):
     global last_aarush
@@ -1198,7 +1172,15 @@ async def aarush(ctx):
         chosen_aarush = random.choice(tags)
     last_aarush = chosen_aarush
     await ctx.send(f"an aarush -> <@{chosen_aarush}>")
+    await ctx.message.delete()
 
+@bot.command(name="n")
+async def n(ctx, *, words = None):
+    if ctx.guild.id == 1204984035340718170:
+        with open(f'thh.png', 'rb') as img:
+                picture = discord.File(img)
+                await ctx.send(words, file=picture)
+                await ctx.message.delete()
 
 @bot.command(name="hype", help="hypes up gt")
 async def gt_hype(ctx):
@@ -1210,5 +1192,34 @@ async def gt_hype(ctx):
     await ctx.send("**RAAAAAHHHHHHHH**")
     await ctx.send(f"# __**{hype_word}!!!**__")
 
+@bot.command(name="quant", help="QUANT")
+async def quant(ctx):
+    await ctx.send(f"# QUANT QUANT QUANT QUANT QUANT QUANT\n"
+                    "QUANT QUANT QUANT QUANT QUANT QUANTQUANT QUANT QUANT QUANT QUANT QUANTQUANT"
+                    "QUANT QUANT QUANT QUANT QUANTQUANT QUANT QUANT QUANT QUANT QUANTQUANT QUANT"
+                    "QUANT QUANT QUANT QUANTQUANT QUANT QUANT QUANT QUANT QUANTQUANT QUANT QUANT" 
+                    "QUANT QUANT QUANTQUANT QUANT QUANT QUANT QUANT QUANTQUANT QUANT QUANT QUANT QUANT QUANTQUANT QUANT QUANT QUANT QUANT QUANT")
+
+@bot.command(name="money", help="money")
+async def money(ctx):
+    await ctx.send("I don't get the way you guys think. I want MONEY. 6 figures right out of college. 200k a year entry level. I'm in this for MONEY. I don't care about whether I'm 'fufilled' I want MONEY. Whatever gets me the most MONEY. What technology gets me PAID THE BEST. All I care about in this major is MONEY. That's why I'm in college, I don't wanna laugh and play with y'all. I don't wanna be buddy buddy with y'all. I'm here for MONEY.")
+
+@bot.command(name="yeti", help="Alrighty, guys...")
+async def yeti(ctx):
+    await ctx.send(f"Alrighty, guys, it's been fun, but we all need to tone it down. Remember, this is the official Georgia Tech '28 server. "
+                    "We've allowed you to have your fun for a while, but we really need to maintain a degree of professionalism. "
+                    "Most of the rules in ⁠rules can be summed up in one rule: If you wouldn't want your professor or boss to see whatever you're thinking of posting, it's NOT appropriate to post it here either.  "
+                    "We'd like to see more professionalism in the way you conduct yourself in this server. Keep in mind that this decision comes from our entire team.")
+
+panda_hate = [":clown:", ":panda:", "what a bozo"]
+@bot.command(name="panda", help="what a bozo")
+async def panda(ctx, *, new_remark = None):
+    global panda_hate
+    if new_remark:
+        panda_hate.append(new_remark)
+        await ctx.message.reply(f"got it. :panda: {new_remark}")
+    else:
+        remark = random.choice(panda_hate)
+        await ctx.message.reply(remark, mention_author = False)
 
 bot.run(TOKEN)
