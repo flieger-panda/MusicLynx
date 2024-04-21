@@ -9,11 +9,8 @@ from youtube_search import YoutubeSearch
 # regex
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
-
 import re
-def regex_match(word, message):
-    # \W<word>|^<word>
-    return bool(re.match((r'\W' + word + r'|^' + word), message))
+
 
 import json
 
@@ -77,6 +74,7 @@ ping_info = {}
 # run when bot is ready
 @bot.event
 async def on_ready():
+    global most_important
     global logging
     # log to console
     print("Lynx online")
@@ -86,16 +84,20 @@ async def on_ready():
         print(f"Synced {len(synced)} commands")
     except Exception as e:
         print(e)
+    
+    try:
+        important = open('mostimportant.txt', 'r')
+        most_important = important.readlines()
+    except:
+        print("copypasta parse failed")
+
+
     try:
         with open("logginginfo.json", "r") as read_file:
             global logging
             logging = json.load(read_file)
             for info in logging:
                 logging[info]["log"]
-
-                # logging[info]["logging_channel"] = logging[info]["logging_channel"].replace("#","")
-                # logging[info]["logging_channel"] = logging[info]["logging_channel"].replace("<","")
-                # logging[info]["logging_channel"] = logging[info]["logging_channel"].replace(">","")
 
                 logging[info]["logging_channel"] = int(logging[info]["logging_channel"])
     except Exception as e:
@@ -474,7 +476,6 @@ async def skip(interaction: discord.Interaction):
 
 
 # fun
-
 @bot.tree.command(name="8ball", description="answers a question using a UGA-tier decision tree")
 @app_commands.describe(question="I'll answer this question")
 async def eight_ball(interaction: discord.Interaction, question: str):
@@ -492,11 +493,6 @@ async def eight_ball(interaction: discord.Interaction, question: str):
 
     await interaction.followup.send(f"**Magic 8-ball**\nQuestion: {question}\nMagic 8-ball's Answer: `{answer}`")
 
-@bot.tree.command(name="timestmamp", description="send discord timestamp")
-@app_commands.describe(month="Month", day="Day", hour="Hour", minute="Minute")
-async def timestamp(interaction: discord.Interaction, heading: str, year: int, month: int, day: int, hour: int, minute: int):
-    event_date = datetime(year=year, month=month, day=day, hour=hour, minute=minute)
-    await interaction.response.send("in development")
 
 
 @bot.tree.command(name="meme", description="generates a meme that is visible to only you, or the entire server")
@@ -647,7 +643,7 @@ async def ping_watch_setup(interaction: discord.Interaction, action: app_command
         except:
             await interaction.response.send_message("you don't have any pings set up")
         return
-    if action == "enable":
+    if action == "enable" and keyword != ".*":
         if keyword in ping_info and (keyword != None):
             if interaction.user.id in ping_info[keyword]:
                 await interaction.response.send_message(f"you're already in the ping list for mentions of '{keyword}'.")
@@ -660,7 +656,7 @@ async def ping_watch_setup(interaction: discord.Interaction, action: app_command
             await interaction.response.send_message(f"ping for mentions of '{keyword}' set up!")
         else:
             await interaction.response.send_message(f"you must provide a keyword")
-    elif action == "disable":
+    if action == "disable":
         if keyword in ping_info and (keyword != None):
             ping_info[keyword] = ping_info[keyword].remove(interaction.user.id)
             await interaction.response.send_message(f"pinging disabled for mentions of '{keyword}'")
@@ -673,6 +669,8 @@ async def ping_watch_setup(interaction: discord.Interaction, action: app_command
                 except:
                     pass
             await interaction.response.send_message("all pings disabled for you.")
+    else:
+        await interaction.response.send_message("That ping is illegal :moyai:")
 
     with open("pinginfo.json", "w") as write_file:
         json.dump(ping_info, write_file)
@@ -788,6 +786,9 @@ async def logging_config(ctx, action, channel: discord.TextChannel = None):
     # print(type(logging[id]["logging_channel"]))
     # print(logging)
 
+def regex_match(word, message):
+    # \W<word>|^<word>
+    return bool(re.search((r'\W' + word + r'|^' + word), message))
 
 # checking if the next line should skipping
 @bot.event
@@ -823,6 +824,15 @@ async def on_message(message):
                             to_ping.append(ping_info[word])
                     else:
                         print(f"Error: ping_info[word] is neither a list nor a int it is {type(ping_info[word])}")
+            if to_ping:
+                ask_boomers = discord.utils.get(message.guild.channels, name="bot-commands")
+                string_to_send = f"<@{message.author.id}> mentioned:\n"
+                if len(why_ping) != len(to_ping):
+                    print(f"Error: why_ping, {why_ping} and to_ping, {to_ping} are not the same length. This should "
+                          f"not happen.")
+                for why, to in zip(why_ping, to_ping):
+                    string_to_send += f"- {why}, pinging <@{to}>\n"
+                await ask_boomers.send(string_to_send + f"{message.jump_url}", silent=True)
 
     # checking if the sender of a message has been "nerded"
 
@@ -832,15 +842,15 @@ async def on_message(message):
         # adding reaction
         await message.add_reaction("🤓")
         await message.add_reaction("☝️")
-        # rremoving from nerd directory if the 2 messages have already been reacted to
+        # removing from nerd directory if the 2 messages have already been reacted to
         if nerded[message.author.id] >= 2:
             del nerded[message.author.id]
 
     # taiwan on top
-    if "china" in message.content.lower():
-        await message.reply("*West Taiwan")
-    if "chinese" in message.content.lower():
-        await message.reply("*West Taiwanese")
+    # if "china" in message.content.lower():
+    #     await message.reply("*West Taiwan")
+    # if "chinese" in message.content.lower():
+    #    await message.reply("*West Taiwanese")
 
     # responding to pings
     mention = f'<@{1196931379129241600}>'
@@ -849,7 +859,6 @@ async def on_message(message):
             ["wassup?", "you called?", "ayyy, what's good?", "yo", ":moyai:", "ay yo", "aiyyooo... why ping me",
              "yeah?"])
         await message.reply(f'{remark}\nuse /lynx_help to get to know me better.')
-    mention = f'<@{799447829856780289}>'
 
     await bot.process_commands(message)
 
@@ -1150,7 +1159,7 @@ async def lonely(ctx, member: discord.Member = None):
     try:
         channel = member.voice.channel
         # voice = get(bot.voice_clients, guild=ctx.guild)
-        if "lonely" in channel.name:
+        if "lonely" in channel.name.lower():
             await channel.edit(name = f"{member.display_name} is lonely 😢")
             await ctx.message.add_reaction("😢")
         else:
@@ -1221,5 +1230,11 @@ async def panda(ctx, *, new_remark = None):
     else:
         remark = random.choice(panda_hate)
         await ctx.message.reply(remark, mention_author = False)
+
+@bot.command(name="important")
+async def important(ctx):
+    global most_important
+    await ctx.send(random.choice(most_important))
+
 
 bot.run(TOKEN)
