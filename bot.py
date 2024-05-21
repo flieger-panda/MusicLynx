@@ -184,7 +184,7 @@ fax = ["CS majors should get free deodorant", "It's not immoral if you make six 
        "The existence of Ivan Allen is a myth", "East Campus is better",
        "Willage is overrated", "Coffee is a performance drug\nPerformance drugs are the best!", "Willage is overrated",
        "Everyone secretly wishes they were in CS",
-       "OOS students worked harder to get here ¯\_(ツ)_/¯", "Georgia > Florida", "Bigotry is **not** cool",
+       "Georgia > Florida", "Bigotry is **not** cool",
        "If I get bleach on my t-shirt, Imma feel like an asshole",
        "992 > 991", "Macans are not Porsches", "SUVs are dumb", "SAT > ACT"]
 
@@ -802,6 +802,9 @@ async def on_message(message):
             # logging the skip to console
             print(f"Skipping!: '{message.content}' as '{current_line}'")
 
+        if (message.content.lower().strip() == "ass copypasta") and ((message.guild.id == 1204984035340718170) or (message.channel.id == 1182890708756091028)):
+            await message.reply("I don't get the way you guys think.I want to have a woman's ass and just have my face buried under it. I don't want 'money' and I dont care about lines of 'code' I just want ass. Whatever lets me get the most ass. All I care about in this major is ass which I have not seen a many get as they lie in their virgin lives blaming fate to be the reason of their lack of asses. That's why I'll be going to an ass party specifically for cs majors. I don't wanna play and laugh with y'all. I am here for ass")
+
         # amuhak's checker 🎉🎉🎉
         if (message.guild.id == 1182890708265357392) and (not message.flags.silent):
             to_ping = []
@@ -845,12 +848,6 @@ async def on_message(message):
         # removing from nerd directory if the 2 messages have already been reacted to
         if nerded[message.author.id] >= 2:
             del nerded[message.author.id]
-
-    # taiwan on top
-    # if "china" in message.content.lower():
-    #     await message.reply("*West Taiwan")
-    # if "chinese" in message.content.lower():
-    #    await message.reply("*West Taiwanese")
 
     # responding to pings
     mention = f'<@{1196931379129241600}>'
