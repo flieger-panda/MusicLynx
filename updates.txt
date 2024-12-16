@@ -1,0 +1,7 @@
+Update 3.0! by <@799447829856780289>
+Added `!aarush`, which randomly pings an aarush from the server.
+Added `/skip`, which enables skipping a currently playing a song.
+Added `/bradley_hate` which allows mods and my creator to disable or enable the Bradley-hating features. They will be disabled by default from now on :(
+Added `/8ball' which replicates the peak logical prowess of a UGA student to help you make decisions.
+Added `/doggo` which posts a random pic of a doggo! Pls share yours.
+Added a placeholder function for `\meme`. in the future, this command will allow you to generate your own memes!
