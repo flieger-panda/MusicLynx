@@ -675,240 +675,6 @@ async def ping_watch_setup(interaction: discord.Interaction, action: app_command
     with open("pinginfo.json", "w") as write_file:
         json.dump(ping_info, write_file)
 
-
-# SINGING FUNCTIONALITY#
-
-# Setting default varables
-singing = False
-current_line = ""
-time = float(8)
-skipped = False
-
-
-# Find a song's lyrics
-def find_song(song_in):
-    # using the get_links to simplify code
-    url = get_links(song_in)[0]
-    # retrieving the genius song object
-    genius_song = get_links(song_in)[2]
-
-    # handling a search failure from get_links
-    if genius_song == "Genius Search Failed":
-        lines, title = ["search failed"], "sorry"
-        return (lines, title)
-    else:
-        # getting the lyrics
-        song_lyrics = genius.lyrics(song_url=url)
-        # cleaning the lyrics
-        lines = clean(song_lyrics)
-        # getting the title
-        title = genius_song['result']['title']
-        return (lines, title)
-
-
-# Clean a song
-def clean(lyrics):
-    # getting line breaks when there are ad-libs
-    lyrics = lyrics.replace("(", "\n(")
-    lyrics = lyrics.replace(")", ")\n")
-
-    # splitting lines
-    lyrics = lyrics.split("\n")
-
-    # creating a new list to save lyrics over to
-    return_lyrics = []
-    for line in lyrics:
-        # if it has a square bracket, it's not actually a lyrics
-        if "[" not in line:
-            # getting rid of the bits that aren't lyrics
-            if "Embed" in line:
-                line = line.replace("Embed", "")
-                ine = ''.join((x for x in line if not x.isdigit()))
-            if "contributor" in line.lower():
-                continue
-            # i don't have an n-word pass
-            if "nigga" in line.lower():
-                line = line.replace("Nigga", "Ni**a")
-                line = line.replace("nigga", "ni**ga")
-            return_lyrics.append(line)
-
-    return return_lyrics
-
-
-# command to configure logging
-@bot.command(name="logging", help="controls logging")
-async def logging_config(ctx, action, channel: discord.TextChannel = None):
-    global logging
-
-    id = str(ctx.guild.id)
-
-    if ctx.permissions.administrator:
-        if action == "help":
-            try:
-                status = logging[id]['log']
-            except:
-                status = False
-            await ctx.channel.send(
-                f"Logging is currently set to `{status}` for this server.\nuse the command like this `!logging [enable/disable/help] [channel]`")
-            return
-        try:
-            if ctx.author.guild_permissions.administrator or (ctx.author.id == 799447829856780289):
-
-                if id not in logging:
-                    logging[id] = {}
-
-                if action == "enable":
-                    logging[id]["log"] = "True"
-                    logging[id]["log"] = eval(logging[id]["log"])
-                    logging[id]["logging_channel"] = bot.get_channel(channel.id)
-                elif action == "disable":
-                    logging[id]["log"] = "False"
-                    logging[id]["log"] = eval(logging[id]["log"])
-                else:
-                    await ctx.channel.send("ya fucked up. use enable, disable, or help")
-
-                with open("logginginfo.json", "w") as write_file:
-                    logging_temp = logging
-                    try:
-                        for id in logging_temp:
-                            logging_temp[id]["logging_channel"] = (logging_temp[id]["logging_channel"]).id
-                    except:
-                        pass
-                    json.dump(logging_temp, write_file)
-
-                await ctx.channel.send(f"logging {action}d in <#{channel.id}>")
-            else:
-                await ctx.channel.send("you must have administrator permissions to set up logging")
-        except:
-            await ctx.channel.send("something went wrong. try sending `!logging help`")
-    else:
-        await ctx.channel.send("you don't have the perms for that.")
-    # print(type(logging[id]["logging_channel"]))
-    # print(logging)
-
-def regex_match(word, message):
-    # \W<word>|^<word>
-    return bool(re.search((r'\W' + word + r'|^' + word), message))
-
-# checking if the next line should skipping
-@bot.event
-async def on_message(message):
-    # line-skipping
-    global current_line
-    global skip
-    if not message.author.bot:
-        if fuzz.ratio(message.content, current_line) > 50:
-            skip = True
-            # logging the skip to console
-            print(f"Skipping!: '{message.content}' as '{current_line}'")
-
-        if (message.content.lower().strip() == "ass copypasta") and ((message.guild.id == 1204984035340718170) or (message.channel.id == 1182890708756091028)):
-            await message.reply("I don't get the way you guys think.I want to have a woman's ass and just have my face buried under it. I don't want 'money' and I dont care about lines of 'code' I just want ass. Whatever lets me get the most ass. All I care about in this major is ass which I have not seen a many get as they lie in their virgin lives blaming fate to be the reason of their lack of asses. That's why I'll be going to an ass party specifically for cs majors. I don't wanna play and laugh with y'all. I am here for ass")
-
-        # amuhak's checker 🎉🎉🎉
-        if (message.guild.id == 1182890708265357392) and (not message.flags.silent):
-            to_ping = []
-            why_ping = []
-            for word in ping_info:
-                if regex_match(word.lower(), message.content.lower()):
-                    if type(ping_info[word]) is list:
-                        for id in ping_info[word]:
-                            # print(ping_info[word], message.author.id)
-                            why_ping.append(word)
-                            to_ping.append(id)
-                            try:
-                                to_ping.remove(message.author.id)
-                            except:
-                                pass
-                    elif ping_info[word] is int:
-                        if message.author.id != ping_info[word]:
-                            print(ping_info[word], message.author.id)
-                            why_ping.append(word)
-                            to_ping.append(ping_info[word])
-                    else:
-                        print(f"Error: ping_info[word] is neither a list nor a int it is {type(ping_info[word])}")
-            if to_ping:
-                ask_boomers = discord.utils.get(message.guild.channels, name="bot-commands")
-                string_to_send = f"<@{message.author.id}> mentioned:\n"
-                if len(why_ping) != len(to_ping):
-                    print(f"Error: why_ping, {why_ping} and to_ping, {to_ping} are not the same length. This should "
-                          f"not happen.")
-                for why, to in zip(why_ping, to_ping):
-                    string_to_send += f"- {why}, pinging <@{to}>\n"
-                await ask_boomers.send(string_to_send + f"{message.jump_url}", silent=True)
-
-    # checking if the sender of a message has been "nerded"
-
-    if message.author.id in nerded:
-        # incrementing number of messages sent while nerded
-        nerded[message.author.id] += 1
-        # adding reaction
-        await message.add_reaction("🤓")
-        await message.add_reaction("☝️")
-        # removing from nerd directory if the 2 messages have already been reacted to
-        if nerded[message.author.id] >= 2:
-            del nerded[message.author.id]
-
-    # responding to pings
-    mention = f'<@{1196931379129241600}>'
-    if mention in message.content:
-        remark = random.choice(
-            ["wassup?", "you called?", "ayyy, what's good?", "yo", ":moyai:", "ay yo", "aiyyooo... why ping me",
-             "yeah?"])
-        await message.reply(f'{remark}\nuse /lynx_help to get to know me better.')
-
-    await bot.process_commands(message)
-
-
-# logging functionality
-@bot.event
-async def on_message_delete(message):
-    global logging
-    if not message.author.bot:
-        try:
-            if logging[str(message.guild.id)]['log']:
-                logging_channel = bot.get_channel(logging[str(message.guild.id)]['logging_channel'])
-                files = []
-                if message.attachments != []:
-                    files = [await attachment.to_file() for attachment in message.attachments]
-
-                replied_to_str = ""
-                if message.reference is not None:
-                    replied_to = await message.channel.fetch_message(message.reference.message_id)
-                    replied_to_str = f"\nit replied to '{replied_to.content}', sent by __@{replied_to.author.display_name}__"
-
-                await logging_channel.send(
-                    f"""__@{message.author.display_name}__ deleted this from <#{message.channel.id}> at `{message.created_at}`:
-{message.content}{replied_to_str}""", files=files, silent=True)
-
-                # print(message.reference)
-        except:
-            pass
-
-
-@bot.event
-async def on_message_edit(before, after):
-    global logging
-    if not before.author.bot:
-        try:
-            if logging[str(before.guild.id)]['log']:
-                logging_channel = bot.get_channel(logging[str(before.guild.id)]['logging_channel'])
-                files = []
-                if before.attachments != []:
-                    files = [await attachment.to_file() for attachment in before.attachments]
-                replied_to_str = ""
-                if before.reference is not None:
-                    replied_to = await before.channel.fetch_message(before.reference.message_id)
-                    replied_to_str = f"\nit replied to '{replied_to.content}', sent by __@{replied_to.author.display_name}__"
-                await logging_channel.send(
-                    f"__@{before.author.display_name}__ edited a message in <#{before.channel.id}> at `{after.created_at}`\n**from this**:\n{before.content}\n**to this**:\n{after.content}{replied_to_str}",
-                    files=files, silent=True)
-        except Exception as e:
-            print(e)
-
-
-# logging functionality end
-
 # bot reply delete functionality. doesn't work with slash commands as of now.
 @bot.event
 async def on_reaction_add(reaction, user):
@@ -921,206 +687,11 @@ async def on_reaction_add(reaction, user):
             if reaction.emoji == "🗑️":
                 await message.delete()
 
-
-@bot.tree.command(name="purge", description="purges a specific number of messages")
-async def purge(interaction: discord.Interaction, amount: int):
-    # Delete the specified number of messages
-    channel = interaction.channel
-
-    # deleted = [1,2,3]
-    if interaction.user.guild_permissions.manage_messages:
-        deleted = await channel.purge(limit=amount)
-        await interaction.response.send_message("Purging...")
-
-        if len(deleted) == 0:
-            # If no messages were deleted, create an embed message with a custom color and text
-            embed = discord.Embed(title='Purge complete', color=0xFFFF00)
-            embed.description = 'No messages were deleted'
-            # Set the user's profile picture as the thumbnail of the embed
-            embed.set_thumbnail(url=interaction.user.avatar.url)
-            # Send the embed message
-        else:
-            # Create an embed message with a custom color and text
-            embed = discord.Embed(title='Purge complete', color=0xFFFF00)
-            if len(deleted) == 1:
-                # If only one message was deleted, use singular text
-                embed.description = '1 message was deleted'
-            else:
-                # If more than one message was deleted, use plural text
-                embed.description = f'{len(deleted)} messages were deleted'
-            # Set the user's profile picture as the thumbnail of the embed
-            embed.set_thumbnail(url=interaction.user.avatar.url)
-    else:
-        await interaction.response.send_message("you don't have the perms for that")
-
-
-@bot.command(name="sing", help="sings songs!")
-async def sing(ctx, *, song_name):
-    global singing
-    global current_line
-    global skip
-    global skipped
-    global time
-
-    if singing:
-        await ctx.send("i'm alr singing smh. you haven't even told me to stop yet")
-        return
-
-    singing = True
-
-    # """
-    print("singing now")
-    try:
-        lines, title = find_song(song_name)
-    except:
-        await ctx.send("sorry, I had trouble pulling that up. pls try again")
-
-    await ctx.send(title + ":")
-    for line in lines:
-        skip = False
-        # Updating current line
-        current_line = line
-
-        # Waiting for 8 seconds while typing if a line hasn't already been skipped
-        if (not skipped) and singing:
-            async with ctx.typing():
-                await asyncio.sleep(time)
-        skipped = False
-
-        if (not skip) and singing:
-            skip = False
-            if line != "":
-                await ctx.send(f"🗣️{line}")
-            if not singing:
-                break
-        elif skip:
-            print("Skipped!")
-            skipped = True
-            skip = False
-            continue
-        else:
-            break
-    singing = False
-    # """
-
-
-@bot.command(name="rickroll", help="rickrolls")
-async def rickroll(ctx):
-    file = open('rickroll.txt', 'r')
-    lines = file.readlines()
-    global singing
-    global current_line
-    global skip
-    global skipped
-    global time
-
-    if singing:
-        await ctx.send("i'm alr singing smh. you haven't even told me to stop yet")
-
-    singing = True
-
-    # """
-    print("rickrolling now")
-    await ctx.send("https://media1.tenor.com/m/x8v1oNUOmg4AAAAd/rickroll-roll.gif")
-    for line in lines:
-        skip = False
-        # Updating current line
-        current_line = line
-        # Waiting while typing if a line hasn't already been skipped
-        if (not skipped) and singing:
-            async with ctx.typing():
-                await asyncio.sleep(.5)
-        skipped = False
-
-        if (not skip) and singing:
-            skip = False
-            if line != "":
-                await ctx.send(f"{line}")
-            if not singing:
-                break
-        elif skip:
-            print("Skipped!")
-            skipped = True
-            skip = False
-            continue
-        else:
-            break
-    singing = False
-
-
-@bot.command(name="shout", help="SHOUTS songs!")
-async def shout(ctx, *, song_name):
-    global singing
-    global current_line
-    global skip
-    global skipped
-    global time
-
-    if singing:
-        await ctx.send("i'm alr singing smh. you haven't even told me to stop yet")
-
-    singing = True
-
-    # """
-    print("singing now")
-    while True:
-        try:
-            lines, title = find_song(song_name)
-            break
-        except:
-            await ctx.send("sorry, I had trouble pulling that up. lemme try again")
-            continue
-
-    await ctx.send(title + ":")
-    for line in lines:
-        skip = False
-        # Updating current line
-        current_line = line
-
-        # Waiting for 8 seconds while typing if a line hasn't already been skipped
-        if (not skipped) and singing:
-            async with ctx.typing():
-                await asyncio.sleep(time)
-        skipped = False
-
-        if (not skip) and singing:
-            skip = False
-            if line != "":
-                await ctx.send(f"🗣️{line}")
-            if not singing:
-                break
-        elif skip:
-            print("Skipped!")
-            skipped = True
-            skip = False
-            continue
-        else:
-            break
-    singing = False
-
-
-@bot.command(name="time", help="adjusts time between each lyric sent")
-async def time_set(ctx, time_in):
-    global time
-    try:
-        time = float(time_in.strip())
-        await ctx.send(f"ok. time interval set to {time}s")
-    except:
-        await ctx.send(f"bruh idk what you mean by '{time_in}'.")
-
-
-@bot.command(name="stop", help="stops singing")
-async def stop_lyrics(ctx):
-    global singing
-    singing = False
-    await ctx.send("ok. I'll stop 😕")
-
 @bot.command(name="preach", help="spits straight facts")
 async def preach(ctx):
     global fax
     await ctx.send(random.choice(fax))
     await ctx.message.delete()
-
 
 # send reaction when bean
 @bot.command(name="bean")
@@ -1132,7 +703,6 @@ async def bean_lynx(ctx):
 @bot.command(name="ban")
 async def ban_lynx(ctx):
     await ctx.send("🙀")
-
 
 # command to nerd someone
 @bot.command(name="nerd", help="nerds someone")
@@ -1149,21 +719,6 @@ async def nerd(ctx, member: discord.Member):
         nerded[member.id] = 0
         await ctx.send(f"# <@{member.id}> = :nerd:")
 
-@bot.command(name="lonely")
-async def lonely(ctx, member: discord.Member = None):
-    if member == None:
-        member = ctx.author
-    try:
-        channel = member.voice.channel
-        # voice = get(bot.voice_clients, guild=ctx.guild)
-        if "lonely" in channel.name.lower():
-            await channel.edit(name = f"{member.display_name} is lonely 😢")
-            await ctx.message.add_reaction("😢")
-        else:
-            await ctx.send("move to a designated 'lonely' channel")
-    except:
-        await ctx.send("not in a vc 💀")
-
 last_aarush = 0
 @bot.command(name="aarush", help="pings a random aarush")
 async def aarush(ctx):
@@ -1179,6 +734,16 @@ async def aarush(ctx):
     last_aarush = chosen_aarush
     await ctx.send(f"an aarush -> <@{chosen_aarush}>")
     await ctx.message.delete()
+
+aaron_id = "<@324657044647051266>"
+aaronn9981glaze = [f"{aaron_id} is so rich, Jeff Bezos asked him for a loan", f"{aaron_id} is so good at poker, Phil Ivey tried to sign up for his bootcamp", f"{aaron_id} is so smart, he interviewed Jane Street for a job", f"{aaron_id} has such a high GPA, he needs to use scientific notation", f"{aaron_id} is so good at Fortnite, he taught Epic Games how to play it"]
+
+@bot.command(name="aaron", help="aaron9981")
+async def aaron9981(ctx):
+    glaze = random.choice(aaronn9981glaze)
+    await ctx.send(glaze)
+    await ctx.message.delete()
+    
 
 @bot.command(name="hype", help="hypes up gt")
 async def gt_hype(ctx):
