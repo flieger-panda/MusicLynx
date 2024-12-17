@@ -687,6 +687,55 @@ async def on_reaction_add(reaction, user):
             if reaction.emoji == "🗑️":
                 await message.delete()
 
+@bot.event
+async def on_message(message):
+    if not message.author.bot:
+        # amuhak's checker 🎉🎉🎉
+        if (message.guild.id == 1182890708265357392) and (not message.flags.silent):
+            to_ping = []
+            why_ping = []
+            for word in ping_info:
+                if regex_match(word.lower(), message.content.lower()):
+                    if type(ping_info[word]) is list:
+                        for id in ping_info[word]:
+                            # print(ping_info[word], message.author.id)
+                            why_ping.append(word)
+                            to_ping.append(id)
+                            try:
+                                to_ping.remove(message.author.id)
+                            except:
+                                pass
+                    elif ping_info[word] is int:
+                        if message.author.id != ping_info[word]:
+                            print(ping_info[word], message.author.id)
+                            why_ping.append(word)
+                            to_ping.append(ping_info[word])
+                    else:
+                        print(f"Error: ping_info[word] is neither a list nor a int it is {type(ping_info[word])}")
+            if to_ping:
+                ask_boomers = discord.utils.get(message.guild.channels, name="bot-commands")
+                string_to_send = f"<@{message.author.id}> mentioned:\n"
+                if len(why_ping) != len(to_ping):
+                    print(f"Error: why_ping, {why_ping} and to_ping, {to_ping} are not the same length. This should "
+                          f"not happen.")
+                for why, to in zip(why_ping, to_ping):
+                    string_to_send += f"- {why}, pinging <@{to}>\n"
+                await ask_boomers.send(string_to_send + f"{message.jump_url}", silent=True)
+
+    # checking if the sender of a message has been "nerded"
+
+    if message.author.id in nerded:
+        # incrementing number of messages sent while nerded
+        nerded[message.author.id] += 1
+        # adding reaction
+        await message.add_reaction("🤓")
+        await message.add_reaction("☝️")
+        # removing from nerd directory if the 2 messages have already been reacted to
+        if nerded[message.author.id] >= 2:
+            del nerded[message.author.id]
+
+    await bot.process_commands(message)
+
 @bot.command(name="preach", help="spits straight facts")
 async def preach(ctx):
     global fax
