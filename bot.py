@@ -141,20 +141,11 @@ async def lynx_help(interaction: discord.Interaction):
 `/pause` pauses song.
 `/skip` skips song.
 `/stop` stops playing and leaves the vc.\n
-`!sing` sends the lyrics of the song you enter one-by-one. use carefully, or you might get banned :D
-`!shout` SHOUTS the lyrics of the song you enter one-by-one. use carefully, or you might get banned :D
-`!stop` stops sending lyrics.
-`!time` adjusts the time between each line\n
 `!preach` spits straight facts.
-`!rickroll` rickrolls.
 `!hype` sends GT hype.
 `!nerd user` when someone is being far too much of a nerd, nerd them.
-`/doggo` summons a random doggo pic.
 `/8ball [question]` answers questions by harnessing the peak reasoning abilities of a UGA student.
 `/meme [template] [public] [line1] [line2] [line3 (opt.)] [line4 (opt.)]` generates meme\n
-
-if you want to delete a reply i sent to your message, react with 🗑️
-pls use me responsibly.
 """, ephemeral=True)
 
 
@@ -282,7 +273,8 @@ async def join(interaction: discord.Interaction):
         else:
             voice = await channel.connect()
         await interaction.response.send_message("joined channel.")
-    except:
+    except Exception as e:
+        print(e)
         await interaction.response.send_message("you might have to join a vc first.")
 
 
@@ -550,41 +542,6 @@ async def list_templates(interaction: discord.Interaction):
                                             ephemeral=True)
 
 
-# send a random photo of a dog
-lastdog = 0
-doggo_credits = [("Meru", 799447829856780289), ("Meru", 799447829856780289), ("Meru", 799447829856780289),
-                 ("Kira", 190611013232492544), ("Annie", 191576992682868738), ("Annie", 191576992682868738)]
-
-
-@bot.tree.command(name="doggo", description="sends a random pic of a dog")
-async def skip(interaction: discord.Interaction):
-    global lastdog
-    rand = random.randint(1, 6)
-    while rand == lastdog:
-        rand = random.randint(1, 6)
-    lastdog = rand
-    with open(f'dog{rand}.png', 'rb') as img:
-        picture = discord.File(img)
-        await interaction.response.send_message(
-            f"{doggo_credits[rand - 1][0]}, <@{doggo_credits[rand - 1][1]}>'s doggo.", file=picture, silent=True)
-
-
-lastcat = 0
-cat_credits = [109895389544484864, 491364750106558464, 445257802198417408, 121700801612742656, 748540576651280454, 694358844897492994]
-
-
-@bot.tree.command(name="car", description="sends a random pic of a car")
-async def skip(interaction: discord.Interaction):
-    global lastcat
-    rand = random.randint(1, 6)
-    while rand == lastcat:
-        rand = random.randint(1, 6)
-    lastcat = rand
-    with open(f'cat{rand}.png', 'rb') as img:
-        picture = discord.File(img)
-        await interaction.response.send_message(f"<@{cat_credits[rand - 1]}>'s car.", file=picture, silent=True)
-
-
 @bot.tree.command(name="game_night", description="sends an embed to schedule a game night")
 @app_commands.describe(heading="Heading", month="Month", day="Day", hour="Hour", minute="Minute", duration="Duration")
 async def schedule_game_night(interaction: discord.Interaction, heading: str, month: int, day: int, hour: int,
@@ -686,6 +643,10 @@ async def on_reaction_add(reaction, user):
             print("step 2")
             if reaction.emoji == "🗑️":
                 await message.delete()
+
+def regex_match(word, message):
+    # \W<word>|^<word>
+    return bool(re.search((r'\W' + word + r'|^' + word), message))
 
 @bot.event
 async def on_message(message):
